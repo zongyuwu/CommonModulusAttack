@@ -25,8 +25,8 @@ class Gen
     puts "----------"
     print "e="
     p @E
-    print "C="
     puts "----------"
+    print "C="
     p @Ci
   end
  
@@ -46,18 +46,19 @@ class Gen
 private
 
   def enc 
+    ## to do : judge the plain text length and N
     carr = []
     carr_int = []
-    c_chr = ""
     @M.zip(@E, @N).each do |m, e, n|
+      c_chr = ""
       c = m.to_bn.mod_exp(e, n).to_i
       c_int = c
       until c == 0
         c_chr = "#{c_chr}#{(c%(16**2)).chr}"
         c /= (16**2)
       end
-      carr << c_chr.reverse
       carr_int << c_int
+      carr << c_chr.reverse
     end
     return carr, carr_int
   end
@@ -132,4 +133,4 @@ earr = [3, 7, 3, 65537]
 g = Gen.new(earr, 1024)
 g.writepub
 g.writecip
-#g.display_params
+g.display_params

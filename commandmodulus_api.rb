@@ -12,16 +12,18 @@ class CommandModulus
   end
 
   def inputcipher(cfarr) #cfarr is array
-    cfarr.each { |cf|  @C << File.read(cf).unpack("H*")[0].to_i(16) }
-    puts "------------"
+    cfarr.each do |cf|  
+      @C << File.read(cf).unpack("H*")[0].to_i(16)
+    end
     p @C
-    puts "------------"
   end
 
-  def inputkeyfile(kfarr) #only support one modulus now
-    a = OpenSSL::PKey::RSA.new File.read(kfarr[0])
-    @N = a.params["n"].to_i
-    p @N
+  def input_n_file(n)
+    rsa = OpenSSL::PKey::RSA.new File.read(n)
+    @N = rsa.params["n"].to_i
+  end
+
+  def input_e_file(kfarr) #only support one modulus now
     kfarr.each do |kf| 
       rsa = OpenSSL::PKey::RSA.new File.read(kf)
       @E << rsa.params["e"].to_i
@@ -31,13 +33,14 @@ class CommandModulus
   def exploit
   #http://crypto.stackexchange.com/questions/1614/rsa-cracking-the-same-message-is-sent-to-two-different-people-problem
     sanitycheck
-    @EP, @CP = find_ec_pair
+    @EP, @CP = find_ec_pair #EP = e pair ( which two is co-prime) # @CP = c pair
     abp = []
     @EP.each do |ep|
       a, b = extended_gcd(ep[0], ep[1])
       abp << [a, b]
     end
     abp.zip(@CP).each do |v|
+      p v
       if v[0][0]  < 0 #a<0
         @M << expcore(v, "a")
       elsif v[0][1] < 0 #b<0
@@ -104,9 +107,10 @@ private
     tmpcp = []
     @E.each_with_index do |v1, i1|
       @E.drop(i1).each_with_index do |v2, i2|
+        p [i1, i2]
         if v1.gcd(v2) == 1
           tmpep << [v1, v2]
-          tmpcp << [@C[i1], @C[i2]]
+          tmpcp << [@C[i1], @C[i2+i1]]
         end
       end
     end
@@ -149,15 +153,20 @@ end
 #earr = [9, 13]
 #carr = [32, 127]
 #a = CommandModulus.new(n, earr, carr)
-n = 145518833165208701702495434418090057237357773728604886677171619886760738590612864163090559810613912794655742223553389091051900542010866301916626770497281177766506929055320989583436574608961244872048578931949979358219350651028045767048645090953540198249601929929401892591733388302476848668386649536163336622913
+n=149850039675861163850202662354734881017225983880136500244637111409872252075525438278577803835808337124059356236743311547269359096569776905694343047904443527388740949841262931683618760959646918427374297850069626718645798644562156288035648670475945244237716326178356267683841302232505299048779569313118585720163
+
 earr = [3,7]
-carr = [ 489115219897472501492987888013066422961526185059801353150323856814508992495086602484634378216, 15727199419504036641713398229364050308305557239408963626842287357880582438802179229304032481287163717647634391139287700180665935794615717468229760021779707705425534816073418529966489268411105552241835951206390825509894845964982431261179397876949615188107074009866707983196951971693042725924985324102724178436072 ]
+carr = [489115219897472501492987888013066422961526185059801353150323856814508992495086602484634378216 , 1884919235784215446581409963000526795969584431309882825067021645668833557505814115385138816376792831449462192461068483698439603334154041130654993262263541028878352643611813137128780176658236404501349780523179943351936 ]
 
 
 cparr = ["./cipher.txt", "./cipher1.txt", "./cipher2.txt", "./cipher3.txt"]
 pubkarr = ["./pub.pem", "./pub1.pem", "./pub2.pem", "./pub3.pem"]
-a = CommandModulus.new(n, earr, carr)
-#a.inputcipher(cparr)
-#a.inputkeyfile(pubkarr)
+#cparr = ["./cipher.txt", "./cipher1.txt"] 
+#pubkarr = ["./pub.pem", "./pub1.pem" ]
+#a = CommandModulus.new(n, earr, carr)
+a = CommandModulus.new
+a.inputcipher(cparr)
+a.input_e_file(pubkarr)
+a.input_n_file("./pub1.pem")
 a.exploit
 p a.inttostring
