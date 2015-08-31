@@ -9,7 +9,6 @@ class CommandModulus
     sanitycheck
     @EP, @CP = find_ec_pair
     @M = []
-    exploit
   end
 
   def exploit
@@ -21,13 +20,27 @@ class CommandModulus
     end
     abp.zip(@CP).each do |v|
       if v[0][0]  < 0 #a<0
-        return expcore(v, "a")
+        @M << expcore(v, "a")
       elsif v[0][1] < 0 #b<0
-        return expcore(v, "b")
+        @M << expcore(v, "b")
       else
-        return expcore(v, nil) #a and b >0
+        @M << expcore(v, nil) #a and b >0
       end
     end
+    return @M
+  end
+
+  def inttostring
+    m_char = []
+    @M.each do |m|
+      c_chr = ""
+      until m == 0
+        c_chr = "#{c_chr}#{(m%(16**2)).chr}"
+        m /= (16**2)
+      end
+      m_char << c_chr.reverse
+    end
+    return m_char
   end
 
 private
@@ -37,15 +50,34 @@ private
     c1, c2 = v[1][0], v[1][1]
     case neg
     when nil
-      m = ( c1.to_bn.exp_mod(a, @N).to_i * c2.to_bn.exp_mod(b, @N).to_i ) % @N
+      m = ( c1.to_bn.mod_exp(a, @N).to_i * c2.to_bn.mod_exp(b, @N).to_i ) % @N
     when "a"
-      i = c1.to_bn.exp_mod(-1, @N)
-      m = ( c2.to_bn.exp_mod(b, @N).to_i * i.to_bn.exp_mod(-a, @N).to_i ) % @N
+      i = invmod(c1, @N)
+      m = ( c2.to_bn.mod_exp(b, @N).to_i * i.to_bn.mod_exp(-a, @N).to_i ) % @N
     when "b"
-      i = c2.to_bn.exp_mod(-1, @N)
-      m = ( c1.to_bn.exp_mod(a, @N).to_i * i.to_bn.exp_mod(-b, @N).to_i ) % @N
+      i = invmod(c2, @N)
+      m = ( c1.to_bn.mod_exp(a, @N).to_i * i.to_bn.mod_exp(-b, @N).to_i ) % @N
     end
     return m
+  end
+
+  def extended_gcd2(a, b)
+    last_remainder, remainder = a.abs, b.abs
+    x, last_x, y, last_y = 0, 1, 1, 0
+    while remainder != 0
+      last_remainder, (quotient, remainder) = remainder, last_remainder.divmod(remainder)
+      x, last_x = last_x - quotient*x, x
+      y, last_y = last_y - quotient*y, y
+    end
+    return last_remainder, last_x * (a < 0 ? -1 : 1)
+  end
+
+  def invmod(e, et)
+    g, x = extended_gcd2(e, et)
+    if g != 1
+      raise 'Teh maths are broken!'
+    end
+    x % et
   end
 
   def find_ec_pair
@@ -94,6 +126,6 @@ end
 n = 179
 earr = [9, 13]
 carr = [32, 127]
-#earr = [9, 13, 8]
-#carr = [32, 127, 1]
-p CommandModulus.new(n, earr, carr).exploit
+a = CommandModulus.new(n, earr, carr)
+p a.exploit
+p a.inttostring
