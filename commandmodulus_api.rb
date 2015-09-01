@@ -1,8 +1,13 @@
 #!/usr/bin/env ruby
+
+# There is a samll feature in this api
+# If you have losts of (c,e) pair you can just put in here then
+# the tool will solve all the possible solution for you
+
 require 'openssl'
 
 class CommandModulus
-  def initialize(n=nil, earr=nil, carr=nil)
+  def initialize(n=nil, earr=nil, carr=nil) #Set up argv from new method
     @N, @E, @C, @EP, @CP, @M = nil, [], [], [], [], []
     @N = n
     @E = earr.map { |i| i.to_i } if !earr.nil?
@@ -13,9 +18,8 @@ class CommandModulus
 
   def inputcipher(cfarr) #cfarr is array
     cfarr.each do |cf|  
-      @C << File.read(cf).unpack("H*")[0].to_i(16)
+      @C << File.read(cf).unpack("H*")[0].to_i(16)  #Put into and traslate into big int and put into array C
     end
-    p @C
   end
 
   def input_n_file(n)
@@ -67,7 +71,7 @@ class CommandModulus
 
 private
 
-  def expcore(v, neg)
+  def expcore(v, neg) #see the link in the exp then you will know what is this
     a, b  = v[0][0], v[0][1]
     c1, c2 = v[1][0], v[1][1]
     case neg
@@ -79,6 +83,8 @@ private
     when "b"
       i = invmod(c2, @N)
       m = ( c1.to_bn.mod_exp(a, @N).to_i * i.to_bn.mod_exp(-b, @N).to_i ) % @N
+    else
+      raise "Some error in expcore"
     end
     return m
   end
@@ -149,24 +155,32 @@ private
   end
 end
 
-#n = 179
-#earr = [9, 13]
-#carr = [32, 127]
-#a = CommandModulus.new(n, earr, carr)
-n=149850039675861163850202662354734881017225983880136500244637111409872252075525438278577803835808337124059356236743311547269359096569776905694343047904443527388740949841262931683618760959646918427374297850069626718645798644562156288035648670475945244237716326178356267683841302232505299048779569313118585720163
+# == Simple test case == #
+=begin
+n = 179
+earr = [9, 13]
+carr = [32, 127]
+a = CommandModulus.new(n, earr, carr) #set up 
+p a,exploit #do the exploit and print as int
+p a.inttostring #print the exploit result into string
+=end
+# ====================== #
 
-earr = [3,7]
-carr = [489115219897472501492987888013066422961526185059801353150323856814508992495086602484634378216 , 1884919235784215446581409963000526795969584431309882825067021645668833557505814115385138816376792831449462192461068483698439603334154041130654993262263541028878352643611813137128780176658236404501349780523179943351936 ]
+# == Test case for reaf input from file == #
 
-
-cparr = ["./cipher.txt", "./cipher1.txt", "./cipher2.txt", "./cipher3.txt"]
-pubkarr = ["./pub.pem", "./pub1.pem", "./pub2.pem", "./pub3.pem"]
-#cparr = ["./cipher.txt", "./cipher1.txt"] 
-#pubkarr = ["./pub.pem", "./pub1.pem" ]
-#a = CommandModulus.new(n, earr, carr)
+testfile_dir = "./test/"
+cparr = ["cipher.txt", "cipher1.txt", "cipher2.txt", "cipher3.txt"]
+pubkarr = ["pub.pem", "pub1.pem", "pub2.pem", "pub3.pem"]
+cparr.map! { |e| e = "#{testfile_dir}#{e}" }
+pubkarr.map! { |e| e = "#{testfile_dir}#{e}" }
 a = CommandModulus.new
-a.inputcipher(cparr)
-a.input_e_file(pubkarr)
-a.input_n_file("./pub1.pem")
-a.exploit
-p a.inttostring
+a.inputcipher(cparr) #all the cipher you have
+a.input_e_file(pubkarr) #all the public exponent you have  
+#**NOTICE**" : the ciphert and public expnent should in pair
+# eg. cparr = (C1, C2, C3)
+#     eparr = (E1, E2, E3)
+a.input_n_file("#{testfile_dir}/pub2.pem") #input the public modulus 
+#If you dont which n to use you can try for each n
+#For now, we  does not support for multiple N
+p a.exploit # do the exploit and print as int
+p a.inttostring #print the exploit result into string

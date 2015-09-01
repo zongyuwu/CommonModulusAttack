@@ -3,9 +3,16 @@
 require 'openssl'
 require 'base64'
 
-Plaintext = ["./plaintext.txt", "./plaintext1.txt"]
-Ciphertext = [ "./cipher.txt", "./cipher1.txt", "./cipher2.txt", "./cipher3.txt" ]
-PublicKey = [ "./pub.pem", "./pub1.pem", "./pub2.pem", "./pub3.pem" ]
+Testfile_Dir = "./test/" #where the genenerated file in
+Plaintext = ["plaintext.txt", "plaintext1.txt"]
+Ciphertext = [ "cipher.txt", "cipher1.txt", "cipher2.txt", "cipher3.txt" ]
+PublicKey = [ "pub.pem", "pub1.pem", "pub2.pem", "pub3.pem" ]
+
+Plaintext.map! { |e| e = "#{Testfile_Dir}#{e}" }
+Ciphertext.map! { |e| e = "#{Testfile_Dir}#{e}" }
+PublicKey.map! { |e| e = "#{Testfile_Dir}#{e}" }
+
+Earr = [3, 7, 3, 65537] #Set up the public exponent
 
 class Gen
   def initialize(e, bit)
@@ -129,8 +136,7 @@ class RSAtool
   end
 end
 
-earr = [3, 7, 3, 65537]
-g = Gen.new(earr, 1024)
+g = Gen.new(Earr, 1024)
 g.writepub
 g.writecip
 g.display_params
