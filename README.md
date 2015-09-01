@@ -3,7 +3,8 @@ In RSA, when using same Modulus N and different public Exponent e in rsa and the
 
 **How to use**  
   * api  
-    Input argument by calling new
+    Input argument by calling new in first part
+    Input argument by reading file in second part
 ```ruby
 # == Simple test case == #
 n = 179
@@ -12,10 +13,8 @@ carr = [32, 127]
 a = CommandModulus.new(n, earr, carr) #set up 
 p a,exploit #do the exploit and print as int
 p a.inttostring #print the exploit result into string
-# ====================== #
+# ====================== #  
 ```   
-  * api  
-    Input argument by reading file  
 
 ```ruby
 testfile_dir = "./test/"
