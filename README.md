@@ -3,8 +3,8 @@ In RSA, when using same Modulus N and different public Exponent e in rsa and the
 
 **How to use**  
   * api  
-    Input argument by calling new in first part
-    Input argument by reading file in second part
+    Input argument by calling new in first part  
+    Input argument by reading file in second part  
 ```ruby
 # == Simple test case == #
 n = 179
