@@ -5,6 +5,7 @@
 # the tool will solve all the possible solution for you
 
 require 'openssl'
+require 'optparse'
 
 class CommandModulus
   def initialize(n=nil, earr=nil, carr=nil) #Set up argv from new method
@@ -155,34 +156,41 @@ private
   end
 end
 
-# == Simple test case == #
-=begin
-n = 179
-earr = [9, 13]
-carr = [32, 127]
-a = CommandModulus.new(n, earr, carr) #set up 
-p a,exploit #do the exploit and print as int
-p a.inttostring #print the exploit result into string
-=end
-# ====================== #
+class ARGVPraser
+  def initialize
+    @@options = {}
+    @banner = "Usage commandmodulus.rb [options]"
+    OptionsParser.new do |opts|
+      opts.banner = @banner
 
-# == Test case for reaf input from file == #
-=begin
-testfile_dir = "./test/"
-cparr = ["cipher.txt", "cipher1.txt", "cipher2.txt", "cipher3.txt"]
-pubkarr = ["pub.pem", "pub1.pem", "pub2.pem", "pub3.pem"]
-cparr.map! { |e| e = "#{testfile_dir}#{e}" }
-pubkarr.map! { |e| e = "#{testfile_dir}#{e}" }
-a = CommandModulus.new
-a.inputcipher(cparr) #all the cipher you have
-a.input_e_file(pubkarr) #all the public exponent you have  
-#**NOTICE**" : the ciphert and public expnent should in pair
-# eg. cparr = (C1, C2, C3)
-#     eparr = (E1, E2, E3)
-a.input_n_file("#{testfile_dir}/pub2.pem") #input the public modulus 
-#If you dont which n to use you can try for each n
-#For now, we  does not support for multiple N
-p a.exploit # do the exploit and print as int
-p a.inttostring #print the exploit result into string
-=end
-# ====================== #
+      opts.on("-f F", String, :required, "File to read (C,E)") do |v|
+        @@options[:F] = v
+      end
+
+      opts.on("-i I", String, :required, "Input (C,N) in integer") do |v|
+        @@options[:I] = v
+      end
+    end.parse!
+    exit if sanitycheck == false
+    @carr = @@options[:F].nil? ? nil : file
+    @parr = @@options[:I].nil? ? nil : input
+  end
+
+  def carr
+    @carr
+  end
+
+  def parr
+    @parr
+  end
+
+private
+  def sanitycheck
+  end
+
+  def file
+  end
+
+  def input
+  end
+end
