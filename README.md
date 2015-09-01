@@ -13,9 +13,9 @@ a = CommandModulus.new(n, earr, carr) #set up
 p a,exploit #do the exploit and print as int
 p a.inttostring #print the exploit result into string
 # ====================== #
-``` 
- 
-    Input argument by file  
+```   
+  * api  
+    Input argument by reading file  
 
 ```ruby
 testfile_dir = "./test/"
