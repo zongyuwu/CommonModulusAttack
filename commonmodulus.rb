@@ -7,10 +7,10 @@
 require 'openssl'
 require 'optparse'
 
-class CommandModulus
+class CommonModulus
   def initialize(n=nil, earr=nil, carr=nil) #Set up argv from new method
     @N, @E, @C, @EP, @CP, @M = nil, [], [], [], [], []
-    @N = n
+    @N = n.to_i
     @E = earr.map { |i| i.to_i } if !earr.nil?
     @C = carr.map { |i| i.to_i } if !carr.nil?
     @EP, @CP = [], []
@@ -45,7 +45,6 @@ class CommandModulus
       abp << [a, b]
     end
     abp.zip(@CP).each do |v|
-      p v
       if v[0][0]  < 0 #a<0
         @M << expcore(v, "a")
       elsif v[0][1] < 0 #b<0
@@ -99,7 +98,7 @@ private
     tmpcp = []
     @E.each_with_index do |v1, i1|
       @E.drop(i1).each_with_index do |v2, i2|
-        p [i1, i2]
+        #p [i1, i2]
         if v1.gcd(v2) == 1
           tmpep << [v1, v2]
           tmpcp << [@C[i1], @C[i2+i1]]
@@ -144,8 +143,8 @@ end
 class ARGVPraser
   def initialize
     @@options = {}
-    @banner = "Usage commandmodulus.rb [options]"
-    OptionsParser.new do |opts|
+    @banner = "Usage commonmodulus.rb [options]"
+    OptionParser.new do |opts|
       opts.banner = @banner
 
       opts.on("-f F", String, :required, "File to read (C,E,N)") do |v|
@@ -158,16 +157,20 @@ class ARGVPraser
 
     end.parse!
     exit if sanitycheck == false
-    @carr = @@options[:F].nil? ? nil : file
-    @parr = @@options[:I].nil? ? nil : input
+    @farr = @@options[:F].nil? ? nil : file
+    @iarr = @@options[:I].nil? ? nil : input
   end
 
-  def carr
-    @carr
+  def farr
+    @farr
   end
 
-  def parr
-    @parr
+  def iarr
+    @iarr
+  end
+
+  def options
+    @@options
   end
 
 private
@@ -192,9 +195,54 @@ private
     iarr = []
     @@options[:I].gsub(/\s+/, "").scan(/\(.+?\)/) do |v|
       p = v.scan(/[[:digit:]]+/)
-      iarr = [p[0], p[1], p[2]]
+      iarr << [p[0], p[1], p[2]]
     end
-    # p iarr
+    #p iarr
     return iarr
   end
+end
+
+opts = ARGVPraser.new
+
+#we do not support multiple N yet
+
+def check_n(opts, v)
+  check = true
+    tmp = []
+    case v
+    when "F" 
+      o = opts.farr
+      o.each do |f|
+        t = OpenSSL::PKey::RSA.new File.read(f[2])
+        tmp << t.params["n"].to_i
+      end
+    when "I" 
+      o = opts.iarr
+      o.each { |i| tmp << i[2] }
+    end
+    return false if tmp.uniq.length != 1
+end
+
+if opts.options[:F].nil?
+  raise "Sorry, Do not support multiple N yet" if check_n(opts, "I") == false
+  n = opts.iarr[0][2].to_i
+  carr = opts.iarr.map { |c| c[0].to_i }
+  earr = opts.iarr.map { |e| e[1].to_i }
+  #p n, carr, earr
+  a = CommonModulus.new(n, earr, carr)
+  p a.exploit
+  p a.inttostring
+elsif opts.options[:I].nil?
+  raise "Sorry, Do not support multiple N yet" if check_n(opts, "F") == false
+  a = CommonModulus.new
+  n = opts.farr[0][2]
+  a.input_n_file(n)
+  carr = opts.farr.map { |c| c[0] }
+  a.inputcipher(carr)
+  earr = opts.farr.map { |e| e[1] }
+  a.input_e_file(earr)
+  p a.exploit
+  p a.inttostring
+else
+  raise "Bug in the argvparser"
 end

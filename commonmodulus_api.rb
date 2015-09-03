@@ -6,7 +6,7 @@
 
 require 'openssl'
 
-class CommandModulus
+class CommonModulus
   def initialize(n=nil, earr=nil, carr=nil) #Set up argv from new method
     @N, @E, @C, @EP, @CP, @M = nil, [], [], [], [], []
     @N = n
@@ -145,7 +145,7 @@ end
 n = 179
 earr = [9, 13]
 carr = [32, 127]
-a = CommandModulus.new(n, earr, carr) #set up 
+a = CommonModulus.new(n, earr, carr) #set up 
 p a,exploit #do the exploit and print as int
 p a.inttostring #print the exploit result into string
 =end
@@ -158,7 +158,7 @@ cparr = ["cipher.txt", "cipher1.txt", "cipher2.txt", "cipher3.txt"]
 pubkarr = ["pub.pem", "pub1.pem", "pub2.pem", "pub3.pem"]
 cparr.map! { |e| e = "#{testfile_dir}#{e}" }
 pubkarr.map! { |e| e = "#{testfile_dir}#{e}" }
-a = CommandModulus.new
+a = CommonModulus.new
 a.inputcipher(cparr) #all the cipher you have
 a.input_e_file(pubkarr) #all the public exponent you have  
 #**NOTICE**" : the ciphert and public expnent should in pair
