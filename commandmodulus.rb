@@ -148,13 +148,14 @@ class ARGVPraser
     OptionsParser.new do |opts|
       opts.banner = @banner
 
-      opts.on("-f F", String, :required, "File to read (C,E)") do |v|
+      opts.on("-f F", String, :required, "File to read (C,E,N)") do |v|
         @@options[:F] = v
       end
 
-      opts.on("-i I", String, :required, "Input (C,N) in integer") do |v|
+      opts.on("-i I", String, :required, "Input (C,E,N) in integer") do |v|
         @@options[:I] = v
       end
+
     end.parse!
     exit if sanitycheck == false
     @carr = @@options[:F].nil? ? nil : file
@@ -171,11 +172,29 @@ class ARGVPraser
 
 private
   def sanitycheck
+    if @@options[:F].nil? && @@options[:I].nil?
+      puts "#{@banner} #-h for help"
+      return false
+    end
   end
 
   def file
+    farr = []
+    @@options[:F].gsub(/\s+/, "").scan(/\(.+?\)/) do |v|
+      p = v.scan(/[[[:word:]]\.\/]+/)
+      farr << [p[0], p[1], p[2]]
+    end
+    #p farr
+    return farr
   end
 
   def input
+    iarr = []
+    @@options[:I].gsub(/\s+/, "").scan(/\(.+?\)/) do |v|
+      p = v.scan(/[[:digit:]]+/)
+      iarr = [p[0], p[1], p[2]]
+    end
+    # p iarr
+    return iarr
   end
 end
